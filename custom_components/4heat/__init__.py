@@ -93,13 +93,20 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         else:
             _LOGGER.error(f'"{entity_id}" is no valid entity ID')
 
-    
-    hass.services.async_register(DOMAIN, "set_value", async_handle_set_value)
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "switch")
-    )
+    # removal of hass.config_entries.async_forward_entry_setup in 2025.6.
+    # https://developers.home-assistant.io/blog/2024/06/12/async_forward_entry_setups/
+    if hasattr(hass.config_entries, 'async_forward_entry_setups'):
+        hass.async_create_task(                                            
+            hass.config_entries.async_forward_entry_setups(entry, "sensor")
+        )
+        hass.async_create_task(                                            
+            hass.config_entries.async_forward_entry_setups(entry, "switch")
+        )
+    else:
+        hass.async_create_task(                                           
+            hass.config_entries.async_forward_entry_setup(entry, "sensor")
+        )
+        hass.async_create_task(                                                                    
+            hass.config_entries.async_forward_entry_setup(entry, "switch")
+        )
     return True
